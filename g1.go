@@ -48,136 +48,10 @@ func newTempG1() tempG1 {
 	return tempG1{t}
 }
 
-// Q returns group order in big.Int.
+// Q returns group order of BN254 in big.Int
 func (g *G1) Q() *big.Int {
 	return new(big.Int).Set(q)
 }
-
-// // FromUncompressed expects byte slice larger than 64 bytes and given bytes returns a new point in G1.
-// // Serialization rules are in line with zcash library. See below for details.
-// // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
-// // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
-// func (g *G1) FromUncompressed(uncompressed []byte) (*PointG1, error) {
-// 	if len(uncompressed) < 64 {
-// 		return nil, errors.New("input string should be equal or larger than 64")
-// 	}
-// 	var in [64]byte
-// 	copy(in[:], uncompressed[:64])
-// 	if in[0]&(1<<7) != 0 {
-// 		return nil, errors.New("input string should be equal or larger than 64")
-// 	}
-// 	if in[0]&(1<<5) != 0 {
-// 		return nil, errors.New("input string should be equal or larger than 64")
-// 	}
-// 	if in[0]&(1<<6) != 0 {
-// 		for i, v := range in {
-// 			if (i == 0 && v != 0x40) || (i != 0 && v != 0x00) {
-// 				return nil, errors.New("input string should be equal or larger than 64")
-// 			}
-// 		}
-// 		return g.Zero(), nil
-// 	}
-// 	in[0] &= 0x1f
-// 	x, err := fromBytes(in[:32])
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	y, err := fromBytes(in[32:])
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	z := new(fe).one()
-// 	p := &PointG1{*x, *y, *z}
-// 	if !g.IsOnCurve(p) {
-// 		return nil, errors.New("input string should be equal or larger than 64")
-// 	}
-// 	if !g.InCorrectSubgroup(p) {
-// 		return nil, errors.New("input string should be equal or larger than 64")
-// 	}
-// 	return p, nil
-// }
-
-// // ToUncompressed given a G1 point returns bytes in uncompressed (x, y) form of the point.
-// // Serialization rules are in line with zcash library. See below for details.
-// // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
-// // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
-// func (g *G1) ToUncompressed(p *PointG1) []byte {
-// 	out := make([]byte, 64)
-// 	if g.IsZero(p) {
-// 		out[0] |= 1 << 6
-// 		return out
-// 	}
-// 	g.Affine(p)
-// 	copy(out[:32], toBytes(&p[0]))
-// 	copy(out[32:], toBytes(&p[1]))
-// 	return out
-// }
-
-// // FromCompressed expects byte slice larger than 64 bytes and given bytes returns a new point in G1.
-// // Serialization rules are in line with zcash library. See below for details.
-// // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
-// // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
-// func (g *G1) FromCompressed(compressed []byte) (*PointG1, error) {
-// 	if len(compressed) < 32 {
-// 		return nil, errors.New("input string should be equal or larger than 32")
-// 	}
-// 	var in [32]byte
-// 	copy(in[:], compressed[:])
-// 	if in[0]&(1<<7) == 0 {
-// 		return nil, errors.New("compression flag should be set")
-// 	}
-// 	if in[0]&(1<<6) != 0 {
-// 		// in[0] == (1 << 6) + (1 << 7)
-// 		for i, v := range in {
-// 			if (i == 0 && v != 0xc0) || (i != 0 && v != 0x00) {
-// 				return nil, errors.New("input string should be zero when infinity flag is set")
-// 			}
-// 		}
-// 		return g.Zero(), nil
-// 	}
-// 	a := in[0]&(1<<5) != 0
-// 	in[0] &= 0x1f
-// 	x, err := fromBytes(in[:])
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	// solve curve equation
-// 	y := &fe{}
-// 	square(y, x)
-// 	mul(y, y, x)
-// 	add(y, y, b)
-// 	if ok := sqrt(y, y); !ok {
-// 		return nil, errors.New("point is not on curve")
-// 	}
-// 	if y.signBE() == a {
-// 		neg(y, y)
-// 	}
-// 	z := new(fe).one()
-// 	p := &PointG1{*x, *y, *z}
-// 	if !g.InCorrectSubgroup(p) {
-// 		return nil, errors.New("point is not on correct subgroup")
-// 	}
-// 	return p, nil
-// }
-
-// // ToCompressed given a G1 point returns bytes in compressed form of the point.
-// // Serialization rules are in line with zcash library. See below for details.
-// // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
-// // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
-// func (g *G1) ToCompressed(p *PointG1) []byte {
-// 	out := make([]byte, 32)
-// 	g.Affine(p)
-// 	if g.IsZero(p) {
-// 		out[0] |= 1 << 6
-// 	} else {
-// 		copy(out[:], toBytes(&p[0]))
-// 		if !p[1].signBE() {
-// 			out[0] |= 1 << 5
-// 		}
-// 	}
-// 	out[0] |= 1 << 7
-// 	return out
-// }
 
 func (g *G1) fromBytesUnchecked(in []byte) (*PointG1, error) {
 	p0, err := fromBytes(in[:32])
@@ -489,58 +363,25 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG
 	return r.Set(acc), nil
 }
 
-// // MapToCurve given a byte slice returns a valid G1 point.
-// // This mapping function implements the Simplified Shallue-van de Woestijne-Ulas method.
-// // https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
-// // Input byte slice should be a valid field element, otherwise an error is returned.
-// func (g *G1) MapToCurve(in []byte) (*PointG1, error) {
-// 	u, err := fromBytes(in)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	x, y := swuMapG1(u)
-// 	isogenyMapG1(x, y)
-// 	one := new(fe).one()
-// 	p := &PointG1{*x, *y, *one}
-// 	g.ClearCofactor(p)
-// 	return g.Affine(p), nil
-// }
-
-// // EncodeToCurve given a message and domain seperator tag returns the hash result
-// // which is a valid curve point.
-// // Implementation follows BLS12381G1_XMD:SHA-256_SSWU_NU_ suite at
-// // https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
-// func (g *G1) EncodeToCurve(msg, domain []byte) (*PointG1, error) {
-// 	hashRes, err := hashToFpXMDSHA256(msg, domain, 1)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	u := hashRes[0]
-// 	x, y := swuMapG1(u)
-// 	isogenyMapG1(x, y)
-// 	one := new(fe).one()
-// 	p := &PointG1{*x, *y, *one}
-// 	g.ClearCofactor(p)
-// 	return g.Affine(p), nil
-// }
-
-// // HashToCurve given a message and domain seperator tag returns the hash result
-// // which is a valid curve point.
-// // Implementation follows BLS12381G1_XMD:SHA-256_SSWU_RO_ suite at
-// // https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-06
-// func (g *G1) HashToCurve(msg, domain []byte) (*PointG1, error) {
-// 	hashRes, err := hashToFpXMDSHA256(msg, domain, 2)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	u0, u1 := hashRes[0], hashRes[1]
-// 	x0, y0 := swuMapG1(u0)
-// 	x1, y1 := swuMapG1(u1)
-// 	one := new(fe).one()
-// 	p0, p1 := &PointG1{*x0, *y0, *one}, &PointG1{*x1, *y1, *one}
-// 	g.Add(p0, p0, p1)
-// 	g.Affine(p0)
-// 	isogenyMapG1(&p0[0], &p0[1])
-// 	g.ClearCofactor(p0)
-// 	return g.Affine(p0), nil
-// }
+// MapToPointTI maps given 32 bytes into G2 point
+func (g *G1) MapToPointTI(in []byte) (*PointG1, error) {
+	y := &fe{}
+	x, err := fromBytesUnchecked(in)
+	if err != nil {
+		return nil, err
+	}
+	one := new(fe).one()
+	for {
+		square(y, x)
+		mul(y, y, x)
+		add(y, y, b)
+		if ok := sqrt(y, y); ok {
+			if !y.sign() {
+				neg(y, y)
+			}
+			p := &PointG1{*x, *y, *one}
+			return p, nil
+		}
+		add(x, x, one)
+	}
+}

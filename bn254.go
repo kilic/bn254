@@ -57,6 +57,9 @@ var twoInv = &fe{0x87bee7d24f060572, 0xd0fd2add2f1c6ae5, 0x8f5f7492fcfd4f44, 0x1
 // Group order
 var q = bigFromHex("0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47")
 
+// export curve order
+var Order = q
+
 // b coefficient for G1
 var b = &fe{0x7a17caa950ad28d7, 0x1f6ac17ae15521b9, 0x334bea4e696bd284, 0x2a1f6744ce179d8e}
 
@@ -88,56 +91,6 @@ var g2One = PointG2{
 		fe{0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000},
 	},
 }
-
-// var g2One = PointG2{
-// 	fe2{
-// 		fe{0x46debd5cd992f6ed,
-// 			0x674322d4f75edadd,
-// 			0x426a00665e5c4479,
-// 			0x1800deef121f1e76},
-// 		fe{0x97e485b7aef312c2,
-// 			0xf1aa493335a9e712,
-// 			0x7260bfb731fb5d25,
-// 			0x198e9393920d483a},
-// 	},
-// 	fe2{
-// 		fe{0x4ce6cc0166fa7daa,
-// 			0xe3d1e7690c43d37b,
-// 			0x4aab71808dcb408f,
-// 			0x12c85ea5db8c6deb},
-// 		fe{0x55acdadcd122975b,
-// 			0xbc4b313370b38ef3,
-// 			0xec9e99ad690c3395,
-// 			0x090689d0585ff075},
-// 	},
-// 	fe2{
-// 		fe{0xd35d438dc58f0d9d, 0x0a78eb28f5c70b3d, 0x666ea36f7879462c, 0x0e0a77c19a07df2f},
-// 		fe{0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000},
-// 	},
-// }
-
-// G2x0:         "0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed",
-// G2x1:         "0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2",
-// G2y0:         "0x12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa",
-// G2y1:         "0x90689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b",
-
-// 0x4ce6cc0166fa7daa,
-// 0xe3d1e7690c43d37b,
-// 0x4aab71808dcb408f,
-// 0x12c85ea5db8c6deb,
-// 0x55acdadcd122975b,
-// 0xbc4b313370b38ef3,
-// 0xec9e99ad690c3395,
-// 0x090689d0585ff075,
-
-// 0x46debd5cd992f6ed,
-// 0x674322d4f75edadd,
-// 0x426a00665e5c4479,
-// 0x1800deef121f1e76,
-// 0x97e485b7aef312c2,
-// 0xf1aa493335a9e712,
-// 0x7260bfb731fb5d25,
-// 0x198e9393920d483a,
 
 var u = bigFromHex("0x44e992b44a6909f1")
 

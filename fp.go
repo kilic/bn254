@@ -18,6 +18,16 @@ func fromBytes(in []byte) (*fe, error) {
 	return fe, nil
 }
 
+func fromBytesUnchecked(in []byte) (*fe, error) {
+	fe := &fe{}
+	if len(in) != 32 {
+		return nil, errors.New("input string should be equal 32 bytes")
+	}
+	fe.setBytes(in)
+	toMont(fe, fe)
+	return fe, nil
+}
+
 func fromBig(in *big.Int) (*fe, error) {
 	fe := new(fe).setBig(in)
 	if !fe.isValid() {

@@ -19,52 +19,7 @@ func (g *G1) rand() *PointG1 {
 }
 
 func TestG1Serialization(t *testing.T) {
-	// var err error
 	g1 := NewG1()
-	// zero := g1.Zero()
-	// b0 := g1.ToUncompressed(zero)
-	// p0, err := g1.FromUncompressed(b0)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// if !g1.IsZero(p0) {
-	// 	t.Fatal("bad infinity serialization 1")
-	// }
-	// b0 = g1.ToCompressed(zero)
-	// p0, err = g1.FromCompressed(b0)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// if !g1.IsZero(p0) {
-	// 	t.Fatal("bad infinity serialization 2")
-	// }
-	// b0 = g1.ToBytes(zero)
-	// p0, err = g1.FromBytes(b0)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// if !g1.IsZero(p0) {
-	// 	t.Fatal("bad infinity serialization 3")
-	// }
-	// for i := 0; i < fuz; i++ {
-	// 	a := g1.rand()
-	// 	uncompressed := g1.ToUncompressed(a)
-	// 	b, err := g1.FromUncompressed(uncompressed)
-	// 	if err != nil {
-	// 		t.Fatal(err)
-	// 	}
-	// 	if !g1.Equal(a, b) {
-	// 		t.Fatal("bad serialization 1")
-	// 	}
-	// 	compressed := g1.ToCompressed(b)
-	// 	a, err = g1.FromCompressed(compressed)
-	// 	if err != nil {
-	// 		t.Fatal(err)
-	// 	}
-	// 	if !g1.Equal(a, b) {
-	// 		t.Fatal("bad serialization 2")
-	// 	}
-	// }
 	for i := 0; i < fuz; i++ {
 		a := g1.rand()
 		uncompressed := g1.ToBytes(a)
@@ -198,49 +153,6 @@ func TestG1MultiplicativeProperties(t *testing.T) {
 	}
 }
 
-// func TestZKCryptoVectorsG1UncompressedValid(t *testing.T) {
-// 	data, err := ioutil.ReadFile("tests/g1_uncompressed_valid_test_vectors.dat")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	g := NewG1()
-// 	p1 := g.Zero()
-// 	for i := 0; i < 1000; i++ {
-// 		vector := data[i*96 : (i+1)*96]
-// 		p2, err := g.FromUncompressed(vector)
-// 		if err != nil {
-// 			t.Fatal("decoing fails", err, i)
-// 		}
-// 		uncompressed := g.ToUncompressed(p2)
-// 		if !bytes.Equal(vector, uncompressed) || !g.Equal(p1, p2) {
-// 			t.Fatal("bad serialization")
-// 		}
-
-// 		g.Add(p1, p1, &g1One)
-// 	}
-// }
-
-// func TestZKCryptoVectorsG1CompressedValid(t *testing.T) {
-// 	data, err := ioutil.ReadFile("tests/g1_compressed_valid_test_vectors.dat")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	g := NewG1()
-// 	p1 := g.Zero()
-// 	for i := 0; i < 1000; i++ {
-// 		vector := data[i*32 : (i+1)*32]
-// 		p2, err := g.FromCompressed(vector)
-// 		if err != nil {
-// 			t.Fatal("decoing fails", err, i)
-// 		}
-// 		compressed := g.ToCompressed(p2)
-// 		if !bytes.Equal(vector, compressed) || !g.Equal(p1, p2) {
-// 			t.Fatal("bad serialization")
-// 		}
-// 		g.Add(p1, p1, &g1One)
-// 	}
-// }
-
 func TestG1MultiExpExpected(t *testing.T) {
 	g := NewG1()
 	one := g.one()
@@ -283,6 +195,24 @@ func TestG1MultiExpBatch(t *testing.T) {
 	}
 }
 
+func TestG1MapToCurveTI(t *testing.T) {
+	g1 := NewG1()
+	for i := 0; i < fuz; i++ {
+		input := make([]byte, 32)
+		_, err := rand.Read(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		p, err := g1.MapToPointTI(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !g1.IsOnCurve(p) {
+			t.Fatalf("must be on curve")
+		}
+	}
+}
+
 func BenchmarkG1Add(t *testing.B) {
 	g1 := NewG1()
 	a, b, c := g1.rand(), g1.rand(), PointG1{}
@@ -300,15 +230,3 @@ func BenchmarkG1Mul(t *testing.B) {
 		g1.MulScalar(&c, a, e)
 	}
 }
-
-// func BenchmarkG1MapToCurve(t *testing.B) {
-// 	a := fromHex(32, "0x1234")
-// 	g1 := NewG1()
-// 	t.ResetTimer()
-// 	for i := 0; i < t.N; i++ {
-// 		_, err := g1.MapToCurve(a)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-// 	}
-// }

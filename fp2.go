@@ -41,6 +41,21 @@ func (e *fp2) fromBytes(in []byte) (*fe2, error) {
 	return &fe2{*c0, *c1}, nil
 }
 
+func (e *fp2) fromBytesUnchecked(in []byte) (*fe2, error) {
+	if len(in) != 64 {
+		return nil, errors.New("length of input string should be 64 bytes")
+	}
+	c1, err := fromBytesUnchecked(in[:32])
+	if err != nil {
+		return nil, err
+	}
+	c0, err := fromBytesUnchecked(in[32:])
+	if err != nil {
+		return nil, err
+	}
+	return &fe2{*c0, *c1}, nil
+}
+
 func (e *fp2) toBytes(a *fe2) []byte {
 	out := make([]byte, 64)
 	copy(out[:32], toBytes(&a[1]))

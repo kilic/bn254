@@ -28,52 +28,7 @@ func (g *G2) new() *PointG2 {
 }
 
 func TestG2Serialization(t *testing.T) {
-	// var err error
 	g2 := NewG2()
-	// zero := g2.Zero()
-	// b0 := g2.ToUncompressed(zero)
-	// p0, err := g2.FromUncompressed(b0)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// if !g2.IsZero(p0) {
-	// 	t.Fatal("bad infinity serialization 1")
-	// }
-	// b0 = g2.ToCompressed(zero)
-	// p0, err = g2.FromCompressed(b0)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// if !g2.IsZero(p0) {
-	// 	t.Fatal("bad infinity serialization 2")
-	// }
-	// b0 = g2.ToBytes(zero)
-	// p0, err = g2.FromBytes(b0)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// if !g2.IsZero(p0) {
-	// 	t.Fatal("bad infinity serialization 3")
-	// }
-	// for i := 0; i < fuz; i++ {
-	// 	a := g2.rand()
-	// 	uncompressed := g2.ToUncompressed(a)
-	// 	b, err := g2.FromUncompressed(uncompressed)
-	// 	if err != nil {
-	// 		t.Fatal(err)
-	// 	}
-	// 	if !g2.Equal(a, b) {
-	// 		t.Fatal("bad serialization 1")
-	// 	}
-	// 	compressed := g2.ToCompressed(b)
-	// 	a, err = g2.FromCompressed(compressed)
-	// 	if err != nil {
-	// 		t.Fatal(err)
-	// 	}
-	// 	if !g2.Equal(a, b) {
-	// 		t.Fatal("bad serialization 2")
-	// 	}
-	// }
 	for i := 0; i < fuz; i++ {
 		a := g2.rand()
 		uncompressed := g2.ToBytes(a)
@@ -299,6 +254,24 @@ func TestG2MultiExpBatch(t *testing.T) {
 	_, _ = g.MultiExp(result, bases, scalars)
 	if !g.Equal(expected, result) {
 		t.Fatal("bad multi-exponentiation")
+	}
+}
+
+func TestG2MapToCurveTI(t *testing.T) {
+	g2 := NewG2()
+	for i := 0; i < fuz; i++ {
+		input := make([]byte, 64)
+		_, err := rand.Read(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		p, err := g2.MapToPointTI(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !g2.IsOnCurve(p) {
+			t.Fatalf("must be on curve")
+		}
 	}
 }
 

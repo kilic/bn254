@@ -58,136 +58,10 @@ func newTempG2() tempG2 {
 	return tempG2{t}
 }
 
-// Q returns group order in big.Int.
+// Q returns group order of BN254 in big.Int
 func (g *G2) Q() *big.Int {
 	return new(big.Int).Set(q)
 }
-
-// // FromUncompressed expects byte slice larger than 128 bytes and given bytes returns a new point in G2.
-// // Serialization rules are in line with zcash library. See below for details.
-// // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
-// // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
-// func (g *G2) FromUncompressed(uncompressed []byte) (*PointG2, error) {
-// 	if len(uncompressed) < 128 {
-// 		return nil, errors.New("input string should be equal or larger than 128")
-// 	}
-// 	var in [128]byte
-// 	copy(in[:], uncompressed[:128])
-// 	if in[0]&(1<<7) != 0 {
-// 		return nil, errors.New("compression flag should be zero")
-// 	}
-// 	if in[0]&(1<<5) != 0 {
-// 		return nil, errors.New("sort flag should be zero")
-// 	}
-// 	if in[0]&(1<<6) != 0 {
-// 		for i, v := range in {
-// 			if (i == 0 && v != 0x40) || (i != 0 && v != 0x00) {
-// 				return nil, errors.New("input string should be zero when infinity flag is set")
-// 			}
-// 		}
-// 		return g.Zero(), nil
-// 	}
-// 	in[0] &= 0x1f
-// 	x, err := g.f.fromBytes(in[:64])
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	y, err := g.f.fromBytes(in[64:])
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	z := new(fe2).one()
-// 	p := &PointG2{*x, *y, *z}
-// 	if !g.IsOnCurve(p) {
-// 		return nil, errors.New("point is not on curve")
-// 	}
-// 	if !g.InCorrectSubgroup(p) {
-// 		return nil, errors.New("point is not on correct subgroup")
-// 	}
-// 	return p, nil
-// }
-
-// // ToUncompressed given a G2 point returns bytes in uncompressed (x, y) form of the point.
-// // Serialization rules are in line with zcash library. See below for details.
-// // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
-// // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
-// func (g *G2) ToUncompressed(p *PointG2) []byte {
-// 	out := make([]byte, 128)
-// 	g.Affine(p)
-// 	if g.IsZero(p) {
-// 		out[0] |= 1 << 6
-// 		return out
-// 	}
-// 	copy(out[:64], g.f.toBytes(&p[0]))
-// 	copy(out[64:], g.f.toBytes(&p[1]))
-// 	return out
-// }
-
-// // FromCompressed expects byte slice larger than 64 bytes and given bytes returns a new point in G2.
-// // Serialization rules are in line with zcash library. See below for details.
-// // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
-// // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
-// func (g *G2) FromCompressed(compressed []byte) (*PointG2, error) {
-// 	if len(compressed) < 64 {
-// 		return nil, errors.New("input string should be equal or larger than 64")
-// 	}
-// 	var in [64]byte
-// 	copy(in[:], compressed[:])
-// 	if in[0]&(1<<7) == 0 {
-// 		return nil, errors.New("bad compression")
-// 	}
-// 	if in[0]&(1<<6) != 0 {
-// 		// in[0] == (1 << 6) + (1 << 7)
-// 		for i, v := range in {
-// 			if (i == 0 && v != 0xc0) || (i != 0 && v != 0x00) {
-// 				return nil, errors.New("input string should be zero when infinity flag is set")
-// 			}
-// 		}
-// 		return g.Zero(), nil
-// 	}
-// 	a := in[0]&(1<<5) != 0
-// 	in[0] &= 0x1f
-// 	x, err := g.f.fromBytes(in[:])
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	// solve curve equation
-// 	y := &fe2{}
-// 	g.f.square(y, x)
-// 	g.f.mul(y, y, x)
-// 	g.f.add(y, y, b2)
-// 	if ok := g.f.sqrt(y, y); !ok {
-// 		return nil, errors.New("point is not on curve")
-// 	}
-// 	if y.signBE() == a {
-// 		g.f.neg(y, y)
-// 	}
-// 	z := new(fe2).one()
-// 	p := &PointG2{*x, *y, *z}
-// 	if !g.InCorrectSubgroup(p) {
-// 		return nil, errors.New("point is not on correct subgroup")
-// 	}
-// 	return p, nil
-// }
-
-// // ToCompressed given a G2 point returns bytes in compressed form of the point.
-// // Serialization rules are in line with zcash library. See below for details.
-// // https://github.com/zcash/librustzcash/blob/master/pairing/src/bls12_381/README.md#serialization
-// // https://docs.rs/bls12_381/0.1.1/bls12_381/notes/serialization/index.html
-// func (g *G2) ToCompressed(p *PointG2) []byte {
-// 	out := make([]byte, 64)
-// 	g.Affine(p)
-// 	if g.IsZero(p) {
-// 		out[0] |= 1 << 6
-// 	} else {
-// 		copy(out[:], g.f.toBytes(&p[0]))
-// 		if !p[1].signBE() {
-// 			out[0] |= 1 << 5
-// 		}
-// 	}
-// 	out[0] |= 1 << 7
-// 	return out
-// }
 
 func (g *G2) fromBytesUnchecked(in []byte) (*PointG2, error) {
 	p0, err := g.f.fromBytes(in[:64])
@@ -497,6 +371,30 @@ func (g *G2) MultiExp(r *PointG2, points []*PointG2, powers []*big.Int) (*PointG
 		g.Add(acc, acc, windows[i])
 	}
 	return r.Set(acc), nil
+}
+
+// MapToPointTI maps given 64 bytes into G2 point
+func (g *G2) MapToPointTI(in []byte) (*PointG2, error) {
+	fp2 := g.f
+	y := &fe2{}
+	x, err := fp2.fromBytesUnchecked(in)
+	if err != nil {
+		return nil, err
+	}
+	one := fp2.one()
+	for {
+		fp2.square(y, x)
+		fp2.mul(y, y, x)
+		fp2.add(y, y, b2)
+		if ok := fp2.sqrt(y, y); ok {
+			if !y.sign() {
+				fp2.neg(y, y)
+			}
+			p := &PointG2{*x, *y, *one}
+			return p, nil
+		}
+		fp2.add(x, x, one)
+	}
 }
 
 // func (g *G2) wnafMul(c, p *PointG2, e *big.Int) *PointG2 {
