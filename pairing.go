@@ -39,7 +39,7 @@ func NewEngine() *Engine {
 
 type pairingEngineTemp struct {
 	t2  [10]*fe2
-	t12 [20]fe12
+	t12 [11]fe12
 }
 
 func newEngineTemp() pairingEngineTemp {
@@ -47,7 +47,7 @@ func newEngineTemp() pairingEngineTemp {
 	for i := 0; i < 10; i++ {
 		t2[i] = &fe2{}
 	}
-	t12 := [20]fe12{}
+	t12 := [11]fe12{}
 	return pairingEngineTemp{t2, t12}
 }
 
@@ -68,7 +68,7 @@ func (e *Engine) AddPairInv(g1 *PointG1, g2 *PointG2) *Engine {
 	return e
 }
 
-// Reset deletes added pairs.
+// Reset removes pair stack.
 func (e *Engine) Reset() *Engine {
 	e.pairs = []pair{}
 	return e
@@ -92,23 +92,23 @@ func (e *Engine) doublingStep(coeff *[3]fe2, r *PointG2) {
 	fp2.square(t[1], &r[1])
 	fp2.square(t[2], &r[2])
 	fp2.double(t[7], t[2])
-	fp2.add(t[7], t[7], t[2])
+	fp2.addAssign(t[7], t[2])
 	fp2.mul(t[3], t[7], b2)
 	fp2.double(t[4], t[3])
-	fp2.add(t[4], t[4], t[3])
+	fp2.addAssign(t[4], t[3])
 	fp2.add(t[5], t[1], t[4])
 	fp2.mulByFq(t[5], t[5], twoInv)
 	fp2.add(t[6], &r[1], &r[2])
 	fp2.square(t[6], t[6])
 	fp2.add(t[7], t[2], t[1])
-	fp2.sub(t[6], t[6], t[7])
+	fp2.subAssign(t[6], t[7])
 	fp2.sub(&coeff[2], t[3], t[1])
 	fp2.square(t[7], &r[0])
 	fp2.sub(t[4], t[1], t[4])
 	fp2.mul(&r[0], t[4], t[0])
 	fp2.square(t[2], t[3])
 	fp2.double(t[3], t[2])
-	fp2.add(t[3], t[3], t[2])
+	fp2.addAssign(t[3], t[2])
 	fp2.square(t[5], t[5])
 	fp2.sub(&r[1], t[5], t[3])
 	fp2.mul(&r[2], t[1], t[6])
@@ -134,10 +134,10 @@ func (e *Engine) additionStep(coeff *[3]fe2, r, q *PointG2) {
 	fp2.mul(t[3], &r[0], t[3])
 	fp2.double(t[5], t[3])
 	fp2.sub(t[5], t[4], t[5])
-	fp2.add(t[5], t[5], t[2])
+	fp2.addAssign(t[5], t[2])
 	fp2.mul(&r[0], t[1], t[5])
 	fp2.sub(t[2], t[3], t[5])
-	fp2.mul(t[2], t[2], t[0])
+	fp2.mulAssign(t[2], t[0])
 	fp2.mul(t[3], &r[1], t[4])
 	fp2.sub(&r[1], t[2], t[3])
 	fp2.mul(&r[2], &r[2], t[4])
@@ -148,7 +148,7 @@ func (e *Engine) additionStep(coeff *[3]fe2, r, q *PointG2) {
 	coeff[0].set(t[1])
 }
 
-func (e *Engine) preCompute(ellCoeffs *[102][3]fe2, twistPoint *PointG2) {
+func (e *Engine) prepare(ellCoeffs *[102][3]fe2, twistPoint *PointG2) {
 	// Algorithm 5 in  https://eprint.iacr.org/2019/077.pdf
 	if e.G2.IsZero(twistPoint) {
 		return
@@ -164,7 +164,6 @@ func (e *Engine) preCompute(ellCoeffs *[102][3]fe2, twistPoint *PointG2) {
 			j++
 		}
 	}
-
 	j = len(ellCoeffs) - 2
 	Q1 := new(PointG2)
 	e.fp2.conjugate(&Q1[0], &twistPoint[0])
@@ -183,7 +182,7 @@ func (e *Engine) millerLoop(f *fe12) {
 	pairs := e.pairs
 	ellCoeffs := make([][102][3]fe2, len(pairs))
 	for i := 0; i < len(pairs); i++ {
-		e.preCompute(&ellCoeffs[i], pairs[i].g2)
+		e.prepare(&ellCoeffs[i], pairs[i].g2)
 	}
 
 	fp12, fp2 := e.fp12, e.fp2
@@ -195,34 +194,32 @@ func (e *Engine) millerLoop(f *fe12) {
 		if j > 0 {
 			fp12.square(f, f)
 		}
-
 		for i := 0; i <= len(pairs)-1; i++ {
 			fp2.mulByFq(t[0], &ellCoeffs[i][j][0], &pairs[i].g1[1])
 			fp2.mulByFq(t[1], &ellCoeffs[i][j][1], &pairs[i].g1[0])
-			fp12.mulBy034(f, t[0], t[1], &ellCoeffs[i][j][2])
+			fp12.mulBy034Assign(f, t[0], t[1], &ellCoeffs[i][j][2])
 		}
 		j++
 		if sixUPlus2.Bit(i) != 0 {
 			for i := 0; i <= len(pairs)-1; i++ {
 				fp2.mulByFq(t[0], &ellCoeffs[i][j][0], &pairs[i].g1[1])
 				fp2.mulByFq(t[1], &ellCoeffs[i][j][1], &pairs[i].g1[0])
-				fp12.mulBy034(f, t[0], t[1], &ellCoeffs[i][j][2])
+				fp12.mulBy034Assign(f, t[0], t[1], &ellCoeffs[i][j][2])
 			}
 			j++
 		}
 	}
-
 	j = 100
 	for i := 0; i <= len(pairs)-1; i++ {
 		fp2.mulByFq(t[0], &ellCoeffs[i][j][0], &pairs[i].g1[1])
 		fp2.mulByFq(t[1], &ellCoeffs[i][j][1], &pairs[i].g1[0])
-		fp12.mulBy034(f, t[0], t[1], &ellCoeffs[i][j][2])
+		fp12.mulBy034Assign(f, t[0], t[1], &ellCoeffs[i][j][2])
 	}
 	j++
 	for i := 0; i <= len(pairs)-1; i++ {
 		fp2.mulByFq(t[0], &ellCoeffs[i][j][0], &pairs[i].g1[1])
 		fp2.mulByFq(t[1], &ellCoeffs[i][j][1], &pairs[i].g1[0])
-		fp12.mulBy034(f, t[0], t[1], &ellCoeffs[i][j][2])
+		fp12.mulBy034Assign(f, t[0], t[1], &ellCoeffs[i][j][2])
 	}
 }
 
@@ -294,18 +291,18 @@ func (e *Engine) finalExp(f *fe12) {
 	fp12.conjugate(&t[2], &t[2])
 	fp12.mulAssign(&t[9], &t[6])
 	fp12.conjugate(&t[9], &t[9])
-	fp12.square(&t[9], &t[9])
+	fp12.cyclotomicSquare(&t[9], &t[9])
 	fp12.mulAssign(&t[9], &t[2])
 	fp12.mulAssign(&t[9], &t[4])
 	fp12.mulAssign(&t[7], &t[4])
 	fp12.mulAssign(&t[7], &t[9])
 	fp12.mulAssign(&t[9], &t[10])
-	fp12.square(&t[7], &t[7])
+	fp12.cyclotomicSquare(&t[7], &t[7])
 	fp12.mulAssign(&t[7], &t[9])
 	fp12.square(&t[7], &t[7])
 	fp12.mulAssign(&t[1], &t[7])
 	fp12.mulAssign(&t[7], &t[3])
-	fp12.square(&t[1], &t[1])
+	fp12.cyclotomicSquare(&t[1], &t[1])
 	fp12.mulAssign(&t[1], &t[7])
 	f.set(&t[1])
 }

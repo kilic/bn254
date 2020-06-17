@@ -224,34 +224,6 @@ func (e *fp6) mulBy01Assign(a *fe6, b0, b1 *fe2) {
 	fp2.add(&a[0], t[2], t[0])
 }
 
-func (e *fp6) mulBy01(c, a *fe6, b0, b1 *fe2) {
-	fp2, t := e.fp2, e.t
-	fp2.mul(t[0], &a[0], b0)
-	fp2.mul(t[1], &a[1], b1)
-	fp2.add(t[2], &a[1], &a[2])
-	fp2.mulAssign(t[2], b1)
-	fp2.subAssign(t[2], t[1])
-	fp2.mulByNonResidue(t[2], t[2])
-	fp2.add(t[3], &a[0], &a[2])
-	fp2.mulAssign(t[3], b0)
-	fp2.subAssign(t[3], t[0])
-	fp2.add(&c[2], t[3], t[1])
-	fp2.add(t[4], b0, b1)
-	fp2.add(t[3], &a[0], &a[1])
-	fp2.mulAssign(t[4], t[3])
-	fp2.subAssign(t[4], t[0])
-	fp2.sub(&c[1], t[4], t[1])
-	fp2.add(&c[0], t[2], t[0])
-}
-
-func (e *fp6) mulBy1(c, a *fe6, b1 *fe2) {
-	fp2, t := e.fp2, e.t
-	fp2.mul(t[0], &a[2], b1)
-	fp2.mul(&c[2], &a[1], b1)
-	fp2.mul(&c[1], &a[0], b1)
-	fp2.mulByNonResidue(&c[0], t[0])
-}
-
 func (e *fp6) mulByNonResidue(c, a *fe6) {
 	fp2, t := e.fp2, e.t
 	fp2.mulByNonResidue(t[0], &a[2])
