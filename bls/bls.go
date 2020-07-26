@@ -18,17 +18,13 @@ type PublicKey struct {
 	point *PointG2
 }
 
-type AggregatedKey struct {
-	point *PointG2
-}
+type AggregatedKey = PublicKey
 
 type Signature struct {
 	point *PointG1
 }
 
-type AggregatedSignature struct {
-	point *PointG1
-}
+type AggregatedSignature = Signature
 
 type SecretKey struct {
 	secret [32]byte
@@ -47,6 +43,16 @@ type BLSSigner struct {
 type BLSVerifier struct {
 	hasher Hasher
 	e      *bn254.Engine
+}
+
+func (p *PublicKey) ToBytes() []byte {
+	g := bn254.NewG2()
+	return g.ToBytes(p.point)
+}
+
+func (p *Signature) ToBytes() []byte {
+	g := bn254.NewG1()
+	return g.ToBytes(p.point)
 }
 
 func NewBLSSigner(hasher Hasher) *BLSSigner {
