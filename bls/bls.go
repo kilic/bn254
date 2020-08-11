@@ -48,9 +48,27 @@ type BLSVerifier struct {
 	e      *bn254.Engine
 }
 
+func PublicKeyFromBytes(in []byte) (*PublicKey, error) {
+	g := bn254.NewG2()
+	publicKey, err := g.FromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	return &PublicKey{publicKey}, nil
+}
+
 func (p *PublicKey) ToBytes() []byte {
 	g := bn254.NewG2()
 	return g.ToBytes(p.point)
+}
+
+func SignatureKeyFromBytes(in []byte) (*Signature, error) {
+	g := bn254.NewG1()
+	signature, err := g.FromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	return &Signature{signature}, nil
 }
 
 func (p *Signature) ToBytes() []byte {
