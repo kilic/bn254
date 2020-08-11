@@ -11,36 +11,36 @@ import (
 
 var Order = bn254.Order
 
-type PointG1 = bn254.PointG1
-type PointG2 = bn254.PointG2
+type PointG1 = bn254.PointG1 // 32 * 2 bytes -> signature
+type PointG2 = bn254.PointG2 // 32 * 4 bytes -> pubkey
 
 type PublicKey struct {
 	point *PointG2
 }
 
-type AggregatedKey = PublicKey
+type SecretKey [32]byte
 
 type Signature struct {
 	point *PointG1
 }
 
-type AggregatedSignature = Signature
+type AggregatedKey = PublicKey
 
-type SecretKey [32]byte
+type AggregatedSignature = Signature
 
 type KeyPair struct {
 	secret *SecretKey
-	public *PublicKey
+	Public *PublicKey
 }
 
 type Message struct {
-	message []byte
-	domain  []byte
+	Message []byte // tx data
+	Domain  []byte // []bytes{}
 }
 
 type BLSSigner struct {
 	hasher  Hasher
-	account *KeyPair
+	Account *KeyPair
 }
 
 type BLSVerifier struct {
@@ -85,7 +85,7 @@ func (signer *BLSSigner) Sign(message *Message) (*Signature, error) {
 	if err != nil {
 		return nil, err
 	}
-	g.MulScalar(signature, signature, new(big.Int).SetBytes(signer.account.secret[:]))
+	g.MulScalar(signature, signature, new(big.Int).SetBytes(signer.Account.secret[:]))
 	return &Signature{signature}, nil
 }
 

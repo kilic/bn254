@@ -9,14 +9,14 @@ import (
 
 func TestVerify(t *testing.T) {
 	message := &Message{
-		message: []byte{0x10, 0x11, 0x12, 0x13},
-		domain:  []byte{0x00, 0x00, 0x00, 0x00},
+		Message: []byte{0x10, 0x11, 0x12, 0x13},
+		Domain:  []byte{0x00, 0x00, 0x00, 0x00},
 	}
 	account, err := NewKeyPair(rand.Reader)
 	if err != nil {
 		t.Fatal(err)
 	}
-	publicKey := account.public
+	publicKey := account.Public
 	hasher := &HasherSHA256{}
 	signer := NewBLSSigner(hasher, account)
 	signature, err := signer.Sign(message)
@@ -32,8 +32,8 @@ func TestVerify(t *testing.T) {
 		t.Fatalf("signature is not verified")
 	}
 	message2 := &Message{
-		message: []byte{0x10, 0x11, 0x12, 0x13},
-		domain:  []byte{0x00, 0x00, 0x00, 0x01},
+		Message: []byte{0x10, 0x11, 0x12, 0x13},
+		Domain:  []byte{0x00, 0x00, 0x00, 0x01},
 	}
 	verified, err = verifier.Verify(message2, signature, publicKey)
 	if err != nil {
@@ -47,8 +47,8 @@ func TestVerify(t *testing.T) {
 func TestVerifyAggregatedCommon(t *testing.T) {
 	hasher := &HasherSHA256{}
 	message := &Message{
-		message: []byte{0x10, 0x11, 0x12, 0x13},
-		domain:  []byte{0x00, 0x00, 0x00, 0x00},
+		Message: []byte{0x10, 0x11, 0x12, 0x13},
+		Domain:  []byte{0x00, 0x00, 0x00, 0x00},
 	}
 	signerSize := 1000
 	publicKeys := make([]*PublicKey, signerSize)
@@ -59,7 +59,7 @@ func TestVerifyAggregatedCommon(t *testing.T) {
 			t.Fatal(err)
 		}
 		signer := NewBLSSigner(hasher, account)
-		publicKeys[i] = account.public
+		publicKeys[i] = account.Public
 		signature, err := signer.Sign(message)
 		if err != nil {
 			t.Fatal(err)
@@ -79,7 +79,7 @@ func TestVerifyAggregatedCommon(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	publicKeys[signerSize-1] = account.public
+	publicKeys[signerSize-1] = account.Public
 	verified, err = verifier.VerifyAggregateCommon(message, publicKeys, aggregatedSignature)
 	if err != nil {
 		t.Fatal(err)
@@ -103,8 +103,8 @@ func TestVerifyAggregated(t *testing.T) {
 			t.Fatal(err)
 		}
 		message := &Message{
-			message: text,
-			domain:  domain,
+			Message: text,
+			Domain:  domain,
 		}
 		account, err := NewKeyPair(rand.Reader)
 		if err != nil {
@@ -117,7 +117,7 @@ func TestVerifyAggregated(t *testing.T) {
 			t.Fatal(err)
 		}
 		messages[i] = message
-		publicKeys[i] = account.public
+		publicKeys[i] = account.Public
 		signatures[i] = signature
 	}
 	verifier := NewBLSVerifier(hasher)
@@ -145,8 +145,8 @@ func BenchmarkVerifyAggregated24ByteMsgSHA256(t *testing.B) {
 			t.Fatal(err)
 		}
 		message := &Message{
-			message: text,
-			domain:  domain,
+			Message: text,
+			Domain:  domain,
 		}
 		account, err := NewKeyPair(rand.Reader)
 		if err != nil {
@@ -159,7 +159,7 @@ func BenchmarkVerifyAggregated24ByteMsgSHA256(t *testing.B) {
 			t.Fatal(err)
 		}
 		messages[i] = message
-		publicKeys[i] = account.public
+		publicKeys[i] = account.Public
 		signatures[i] = signature
 	}
 	verifier := NewBLSVerifier(hasher)
@@ -184,8 +184,8 @@ func BenchmarkVerifyAggregated24ByteMsgKeccak256(t *testing.B) {
 			t.Fatal(err)
 		}
 		message := &Message{
-			message: text,
-			domain:  domain,
+			Message: text,
+			Domain:  domain,
 		}
 		account, err := NewKeyPair(rand.Reader)
 		if err != nil {
@@ -197,7 +197,7 @@ func BenchmarkVerifyAggregated24ByteMsgKeccak256(t *testing.B) {
 			t.Fatal(err)
 		}
 		messages[i] = message
-		publicKeys[i] = account.public
+		publicKeys[i] = account.Public
 		signatures[i] = signature
 	}
 	verifier := NewBLSVerifier(hasher)

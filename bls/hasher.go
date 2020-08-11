@@ -25,8 +25,8 @@ func (h *HasherSHA256) Hash(message *Message) (*PointG1, error) {
 		mapper = bn254.NewG1()
 	}
 	H := sha256.New()
-	_, _ = H.Write(message.domain)
-	_, _ = H.Write(message.message)
+	_, _ = H.Write(message.Domain)
+	_, _ = H.Write(message.Message)
 	digest := H.Sum(nil)
 	return mapper.MapToPointTI(digest)
 }
@@ -36,6 +36,6 @@ func (h *HasherKeccak256) Hash(message *Message) (*PointG1, error) {
 	if mapper == nil {
 		mapper = bn254.NewG1()
 	}
-	digest := crypto.Keccak256(message.domain, message.message)
+	digest := crypto.Keccak256(message.Domain, message.Message)
 	return mapper.MapToPointTI(digest)
 }
