@@ -26,8 +26,10 @@ type Signature struct {
 
 type AggregatedSignature = Signature
 
-type SecretKey struct {
-	secret [32]byte
+type SecretKey [32]byte
+
+type KeyPair struct {
+	secret *SecretKey
 	public *PublicKey
 }
 
@@ -37,7 +39,8 @@ type Message struct {
 }
 
 type BLSSigner struct {
-	hasher Hasher
+	hasher  Hasher
+	account *KeyPair
 }
 
 type BLSVerifier struct {
@@ -55,34 +58,34 @@ func (p *Signature) ToBytes() []byte {
 	return g.ToBytes(p.point)
 }
 
-func NewBLSSigner(hasher Hasher) *BLSSigner {
-	return &BLSSigner{hasher}
+func NewBLSSigner(hasher Hasher, account *KeyPair) *BLSSigner {
+	return &BLSSigner{hasher, account}
 }
 
 func NewBLSVerifier(hasher Hasher) *BLSVerifier {
 	return &BLSVerifier{hasher, bn254.NewEngine()}
 }
 
-func RandSecretKey(r io.Reader) (*SecretKey, error) {
+func NewKeyPair(r io.Reader) (*KeyPair, error) {
 	s, err := rand.Int(r, Order)
 	if err != nil {
 		return nil, err
 	}
-	secret := [32]byte{}
+	secret := &SecretKey{}
 	copy(secret[32-len(s.Bytes()):], s.Bytes()[:])
 	g2 := bn254.NewG2()
 	public := g2.New()
 	g2.MulScalar(public, g2.One(), s)
-	return &SecretKey{secret, &PublicKey{public}}, nil
+	return &KeyPair{secret, &PublicKey{public}}, nil
 }
 
-func (bls *BLSSigner) Sign(message *Message, key *SecretKey) (*Signature, error) {
+func (signer *BLSSigner) Sign(message *Message) (*Signature, error) {
 	g := bn254.NewG1()
-	signature, err := bls.hasher.Hash(message)
+	signature, err := signer.hasher.Hash(message)
 	if err != nil {
 		return nil, err
 	}
-	g.MulScalar(signature, signature, new(big.Int).SetBytes(key.secret[:]))
+	g.MulScalar(signature, signature, new(big.Int).SetBytes(signer.account.secret[:]))
 	return &Signature{signature}, nil
 }
 
