@@ -97,6 +97,27 @@ func NewKeyPair(r io.Reader) (*KeyPair, error) {
 	return &KeyPair{secret, &PublicKey{public}}, nil
 }
 
+func NewKeyPairFromBytes(in []byte) (*KeyPair, error) {
+	if len(in) != 128+32 {
+		return nil, errors.New("160 byte input is required to recover")
+	}
+	g2 := bn254.NewG2()
+	publicKey, err := g2.FromBytes(in[:128])
+	if err != nil {
+		return nil, err
+	}
+	secretKey := &SecretKey{}
+	copy(secretKey[:], in[128:])
+	return &KeyPair{secretKey, &PublicKey{publicKey}}, nil
+}
+
+func (e *KeyPair) ToBytes() []byte {
+	out := make([]byte, 128+32)
+	copy(out[:128], e.Public.ToBytes())
+	copy(out[128:], e.secret[:])
+	return out
+}
+
 func (signer *BLSSigner) Sign(message *Message) (*Signature, error) {
 	g := bn254.NewG1()
 	signature, err := signer.hasher.Hash(message)

@@ -1,11 +1,30 @@
 package bls
 
 import (
+	"bytes"
 	"crypto/rand"
 	"testing"
 
 	"github.com/kilic/bn254"
 )
+
+func TestKeyPairBytes(t *testing.T) {
+	e0, err := NewKeyPair(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b := e0.ToBytes()
+	e1, err := NewKeyPairFromBytes(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(e0.Public.ToBytes(), e1.Public.ToBytes()) {
+		t.Fatal("bad key enc/dec")
+	}
+	if !bytes.Equal(e0.secret[:], e1.secret[:]) {
+		t.Fatal("bad key enc/dec")
+	}
+}
 
 func TestVerify(t *testing.T) {
 	message := &Message{
