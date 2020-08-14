@@ -111,6 +111,18 @@ func NewKeyPairFromBytes(in []byte) (*KeyPair, error) {
 	return &KeyPair{secretKey, &PublicKey{publicKey}}, nil
 }
 
+func NewKeyPairFromSecret(in []byte) (*KeyPair, error) {
+	if len(in) != 32 {
+		return nil, errors.New("32 byte input is required to make new key pair")
+	}
+	g2 := bn254.NewG2()
+	secretKey := &SecretKey{}
+	copy(secretKey[:], in[:])
+	publicKey := g2.New()
+	g2.MulScalar(publicKey, g2.One(), new(big.Int).SetBytes(in))
+	return &KeyPair{secretKey, &PublicKey{publicKey}}, nil
+}
+
 func (e *KeyPair) ToBytes() []byte {
 	out := make([]byte, 128+32)
 	copy(out[:128], e.Public.ToBytes())

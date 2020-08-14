@@ -13,16 +13,27 @@ func TestKeyPairBytes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	secret := e0.secret
 	b := e0.ToBytes()
 	e1, err := NewKeyPairFromBytes(b)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(e0.Public.ToBytes(), e1.Public.ToBytes()) {
-		t.Fatal("bad key enc/dec")
+		t.Fatal("bad key enc/dec, a")
 	}
 	if !bytes.Equal(e0.secret[:], e1.secret[:]) {
-		t.Fatal("bad key enc/dec")
+		t.Fatal("bad key enc/dec, b")
+	}
+	e2, err := NewKeyPairFromSecret(secret[:])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(e0.Public.ToBytes(), e2.Public.ToBytes()) {
+		t.Fatal("bad key enc/dec, c")
+	}
+	if !bytes.Equal(e0.secret[:], e2.secret[:]) {
+		t.Fatal("bad key enc/dec, d")
 	}
 }
 
