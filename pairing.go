@@ -53,18 +53,22 @@ func newEngineTemp() pairingEngineTemp {
 
 // AddPair adds a g1, g2 point pair to pairing engine
 func (e *Engine) AddPair(g1 *PointG1, g2 *PointG2) *Engine {
+	return e.addPair(e.G1.New().Set(g1), e.G2.New().Set(g2))
+}
+
+// AddPairInv adds a G1, G2 point pair to pairing engine. G1 point is negated.
+func (e *Engine) AddPairInv(g1 *PointG1, g2 *PointG2) *Engine {
+	ng1 := e.G1.New().Set(g1)
+	e.G1.Neg(ng1, ng1)
+	return e.addPair(ng1, e.G2.New().Set(g2))
+}
+
+func (e *Engine) addPair(g1 *PointG1, g2 *PointG2) *Engine {
 	p := newPair(g1, g2)
 	if !e.isZero(p) {
 		e.affine(p)
 		e.pairs = append(e.pairs, p)
 	}
-	return e
-}
-
-// AddPairInv adds a G1, G2 point pair to pairing engine. G1 point is negated.
-func (e *Engine) AddPairInv(g1 *PointG1, g2 *PointG2) *Engine {
-	e.G1.Neg(g1, g1)
-	e.AddPair(g1, g2)
 	return e
 }
 
