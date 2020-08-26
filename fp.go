@@ -154,8 +154,18 @@ func sqrt(c, a *fe) bool {
 	return u.equal(v)
 }
 
-func isQuadraticNonResidue(elem *fe) bool {
+func isQuadraticNonResidue(e *fe) bool {
 	result := new(fe)
-	exp(result, elem, pMinus1Over2)
+	exp(result, e, pMinus1Over2)
 	return !result.isOne()
+}
+
+func legendre(e *fe) int {
+	if e.isZero() {
+		return 0
+	}
+	if isQuadraticNonResidue(e) {
+		return -1
+	}
+	return 1
 }

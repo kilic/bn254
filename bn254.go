@@ -34,8 +34,13 @@ var pPlus1Over4 = bigFromHex("0xc19139cb84c680a6e14116da060561765e05aa45a1c72a34
 
 var pMinus1Over2 = bigFromHex("0x183227397098d014dc2822db40c0ac2ecbc0b548b438e5469e10460b6c3e7ea3")
 
+var pMinus1Over2Fe = &fe{0x9e10460b6c3e7ea3, 0xcbc0b548b438e546, 0xdc2822db40c0ac2e, 0x183227397098d014}
+
 // -1
 var nonResidue1 = &fe{0x68c3488912edefaa, 0x8d087f6872aabf4f, 0x51e1a24709081231, 0x2259d6b14729c0fa}
+
+// -1
+var negativeOne = &fe{0x68c3488912edefaa, 0x8d087f6872aabf4f, 0x51e1a24709081231, 0x2259d6b14729c0fa}
 
 // -1 + 0 * u
 var negativeOne2 = &fe2{
@@ -51,6 +56,12 @@ var nonResidue2 = &fe2{
 
 // 2 ^ (-1)
 var twoInv = &fe{0x87bee7d24f060572, 0xd0fd2add2f1c6ae5, 0x8f5f7492fcfd4f44, 0x1f37631a3d9cbfac}
+
+// sqrt(-3)
+var sqrtMinus3 = &fe{0x3e424383c39ad5b9, 0x28ed3f00245fdc6a, 0x4a2e7e8c1e5ebdfa, 0x05b858f624573163}
+
+// (sqrt(-3) - 1) / 2
+var zz = &fe{0x71930c11d782e155, 0xa6bb947cffbe3323, 0xaa303344d4741444, 0x2c3b3f0d26594943}
 
 // Curve constants
 

@@ -363,7 +363,7 @@ func (g *G1) MultiExp(r *PointG1, points []*PointG1, powers []*big.Int) (*PointG
 	return r.Set(acc), nil
 }
 
-// MapToPointTI maps given 32 bytes into G2 point
+// MapToPointTI applies try-and-increment method and maps given 32 bytes into G2 point
 func (g *G1) MapToPointTI(in []byte) (*PointG1, error) {
 	y := &fe{}
 	x, err := fromBytesUnchecked(in)
@@ -384,4 +384,84 @@ func (g *G1) MapToPointTI(in []byte) (*PointG1, error) {
 		}
 		add(x, x, one)
 	}
+}
+
+// MapToPointTI applies Fouque Tibouchi map to point method
+func (g *G1) MapToPointFT(in []byte) (*PointG1, error) {
+	t, err := fromBytesUnchecked(in)
+	if err != nil {
+		return nil, err
+	}
+
+	w, a, t2 := new(fe), new(fe), new(fe)
+
+	square(t2, t)
+	add(a, t2, b)
+	add(a, a, one)
+
+	st := new(fe)
+	mul(st, sqrtMinus3, t)
+
+	w0 := new(fe)
+	mul(w0, st, a)
+	inverse(w0, w0)
+
+	square(w, st)
+	mul(w, w, w0)
+
+	e := isQuadraticNonResidue(t)
+	y := new(fe)
+
+	// x1
+	tw, x1 := new(fe), new(fe)
+	mul(tw, t, w)
+	sub(x1, zz, tw)
+
+	y.set(x1)
+	square(y, x1)
+	mul(y, y, x1)
+	add(y, y, b)
+	if sqrt(y, y) {
+		if e {
+			neg(y, y)
+		}
+		return &PointG1{*x1, *y, *one}, nil
+	}
+
+	// x2
+	x2 := new(fe)
+	sub(x2, negativeOne, x1)
+
+	y.set(x2)
+	square(y, x2)
+	mul(y, y, x2)
+	add(y, y, b)
+	if sqrt(y, y) {
+		if e {
+			neg(y, y)
+		}
+		return &PointG1{*x2, *y, *one}, nil
+	}
+
+	// x3
+	x3 := new(fe)
+	square(x3, a)
+	square(x3, x3)
+	mul(x3, x3, w0)
+	mul(x3, x3, w0)
+	add(x3, x3, one)
+
+	y.set(x3)
+	square(y, x3)
+	mul(y, y, x3)
+	add(y, y, b)
+
+	if !sqrt(y, y) {
+		return nil, errors.New("bad implementation")
+	}
+
+	if e {
+		neg(y, y)
+	}
+	return &PointG1{*x3, *y, *one}, nil
 }
