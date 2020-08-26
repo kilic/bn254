@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"testing"
-
-	"github.com/kilic/bn254"
 )
 
 func TestKeyPairBytes(t *testing.T) {
@@ -47,7 +45,7 @@ func TestVerify(t *testing.T) {
 		t.Fatal(err)
 	}
 	publicKey := account.Public
-	hasher := &HasherSHA256{}
+	hasher := NewHasher_Keccak_FT()
 	signer := NewBLSSigner(hasher, account)
 	signature, err := signer.Sign(message)
 	if err != nil {
@@ -75,7 +73,7 @@ func TestVerify(t *testing.T) {
 }
 
 func TestVerifyAggregatedCommon(t *testing.T) {
-	hasher := &HasherSHA256{}
+	hasher := NewHasher_Keccak_FT()
 	message := &Message{
 		Message: []byte{0x10, 0x11, 0x12, 0x13},
 		Domain:  []byte{0x00, 0x00, 0x00, 0x00},
@@ -120,7 +118,7 @@ func TestVerifyAggregatedCommon(t *testing.T) {
 }
 
 func TestVerifyAggregated(t *testing.T) {
-	hasher := &HasherSHA256{}
+	hasher := NewHasher_Keccak_FT()
 	domain := []byte{0x00, 0x00, 0x00, 0x00}
 	signerSize := 1000
 	publicKeys := make([]*PublicKey, signerSize)
@@ -162,7 +160,7 @@ func TestVerifyAggregated(t *testing.T) {
 }
 
 func BenchmarkVerifyAggregated24ByteMsgSHA256(t *testing.B) {
-	hasher := &HasherSHA256{mapper: bn254.NewG1()}
+	hasher := NewHasher_SHA256_FT()
 	domain := []byte{0x00, 0x00, 0x00, 0x00}
 	signerSize := 1000
 	publicKeys := make([]*PublicKey, signerSize)
@@ -201,7 +199,7 @@ func BenchmarkVerifyAggregated24ByteMsgSHA256(t *testing.B) {
 }
 
 func BenchmarkVerifyAggregated24ByteMsgKeccak256(t *testing.B) {
-	hasher := &HasherKeccak256{mapper: bn254.NewG1()}
+	hasher := NewHasher_Keccak_FT()
 	domain := []byte{0x00, 0x00, 0x00, 0x00}
 	signerSize := 1000
 	publicKeys := make([]*PublicKey, signerSize)
