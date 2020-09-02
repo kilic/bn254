@@ -18,6 +18,34 @@ func fromBytes(in []byte) (*fe, error) {
 	return fe, nil
 }
 
+func from48Bytes(in []byte) (*fe, error) {
+	if len(in) != 48 {
+		return nil, errors.New("input string should be equal 48 bytes")
+	}
+	a0 := make([]byte, 32)
+	copy(a0[8:32], in[:24])
+	a1 := make([]byte, 32)
+	copy(a1[8:32], in[24:])
+	e0, err := fromBytes(a0)
+	if err != nil {
+		return nil, err
+	}
+	e1, err := fromBytes(a1)
+	if err != nil {
+		return nil, err
+	}
+	// F = 2 ^ 192 * R
+	F := fe{
+		0xd9e291c2cdd22cd6,
+		0xc722ccf2a40f0271,
+		0xa49e35d611a2ac87,
+		0x2e1043978c993ec8,
+	}
+	mul(e0, e0, &F)
+	add(e1, e1, e0)
+	return e1, nil
+}
+
 func fromBytesUnchecked(in []byte) (*fe, error) {
 	fe := &fe{}
 	if len(in) != 32 {

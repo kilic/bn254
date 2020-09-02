@@ -33,19 +33,16 @@ type KeyPair struct {
 	Public *PublicKey
 }
 
-type Message struct {
-	Message []byte // tx data
-	Domain  []byte // []bytes{}
-}
+type Message = []byte
+type Domain = []byte
 
 type BLSSigner struct {
-	hasher  Hasher
+	Domain  []byte
 	Account *KeyPair
 }
 
 type BLSVerifier struct {
-	hasher Hasher
-	e      *bn254.Engine
+	Domain []byte
 }
 
 func PublicKeyFromBytes(in []byte) (*PublicKey, error) {
@@ -76,12 +73,12 @@ func (p *Signature) ToBytes() []byte {
 	return g.ToBytes(p.point)
 }
 
-func NewBLSSigner(hasher Hasher, account *KeyPair) *BLSSigner {
-	return &BLSSigner{hasher, account}
+func NewBLSSigner(domain Domain, account *KeyPair) *BLSSigner {
+	return &BLSSigner{domain, account}
 }
 
-func NewBLSVerifier(hasher Hasher) *BLSVerifier {
-	return &BLSVerifier{hasher, bn254.NewEngine()}
+func NewBLSVerifier(domain Domain) *BLSVerifier {
+	return &BLSVerifier{domain}
 }
 
 func NewKeyPair(r io.Reader) (*KeyPair, error) {
@@ -130,9 +127,9 @@ func (e *KeyPair) ToBytes() []byte {
 	return out
 }
 
-func (signer *BLSSigner) Sign(message *Message) (*Signature, error) {
+func (signer *BLSSigner) Sign(message Message) (*Signature, error) {
 	g := bn254.NewG1()
-	signature, err := signer.hasher.Hash(message)
+	signature, err := g.HashToCurveFT(message, signer.Domain)
 	if err != nil {
 		return nil, err
 	}
@@ -140,8 +137,8 @@ func (signer *BLSSigner) Sign(message *Message) (*Signature, error) {
 	return &Signature{signature}, nil
 }
 
-func (bls *BLSVerifier) AggregatePublicKeys(keys []*PublicKey) *AggregatedKey {
-	g := bls.e.G2
+func (verifier *BLSVerifier) AggregatePublicKeys(keys []*PublicKey) *AggregatedKey {
+	g := bn254.NewG2()
 	if len(keys) == 0 {
 		return &AggregatedKey{g.Zero()}
 	}
@@ -152,8 +149,8 @@ func (bls *BLSVerifier) AggregatePublicKeys(keys []*PublicKey) *AggregatedKey {
 	return &AggregatedKey{aggregated}
 }
 
-func (bls *BLSVerifier) AggregateSignatures(signatures []*Signature) *AggregatedSignature {
-	g := bls.e.G1
+func (verifier *BLSVerifier) AggregateSignatures(signatures []*Signature) *AggregatedSignature {
+	g := bn254.NewG1()
 	if len(signatures) == 0 {
 		return &AggregatedSignature{g.Zero()}
 	}
@@ -164,49 +161,50 @@ func (bls *BLSVerifier) AggregateSignatures(signatures []*Signature) *Aggregated
 	return &AggregatedSignature{aggregated}
 }
 
-func (bls *BLSVerifier) Verify(message *Message, signature *Signature, publicKey *PublicKey) (bool, error) {
-	M, err := bls.hasher.Hash(message)
+func (verifier *BLSVerifier) Verify(message Message, signature *Signature, publicKey *PublicKey) (bool, error) {
+	e := bn254.NewEngine()
+	g1, g2 := e.G1, e.G2
+	M, err := g1.HashToCurveFT(message, verifier.Domain)
 	if err != nil {
 		return false, err
 	}
-	G2 := bls.e.G2.One()
-	bls.e.AddPair(M, publicKey.point)
-	bls.e.AddPairInv(signature.point, G2)
-	return bls.e.Check(), nil
+	e.AddPair(M, publicKey.point)
+	e.AddPairInv(signature.point, g2.One())
+	return e.Check(), nil
 }
 
-func (bls *BLSVerifier) VerifyAggregateCommon(message *Message, publicKeys []*PublicKey, signature *AggregatedSignature) (bool, error) {
+func (verifier *BLSVerifier) VerifyAggregateCommon(message Message, publicKeys []*PublicKey, signature *AggregatedSignature) (bool, error) {
 	if len(publicKeys) == 0 {
 		return false, errors.New("public key size is zero")
 	}
-	M, err := bls.hasher.Hash(message)
+	e := bn254.NewEngine()
+	g1, g2 := e.G1, e.G2
+	M, err := g1.HashToCurveFT(message, verifier.Domain)
 	if err != nil {
 		return false, err
 	}
-	aggregatedPublicKeys := bls.AggregatePublicKeys(publicKeys)
-	G2 := bls.e.G2.One()
-	bls.e.AddPair(M, aggregatedPublicKeys.point)
-	bls.e.AddPairInv(signature.point, G2)
-	return bls.e.Check(), nil
+	aggregatedPublicKeys := verifier.AggregatePublicKeys(publicKeys)
+	e.AddPair(M, aggregatedPublicKeys.point)
+	e.AddPairInv(signature.point, g2.One())
+	return e.Check(), nil
 }
 
-func (bls *BLSVerifier) VerifyAggregate(messages []*Message, publicKeys []*PublicKey, signature *AggregatedSignature) (bool, error) {
+func (verifier *BLSVerifier) VerifyAggregate(messages []Message, publicKeys []*PublicKey, signature *AggregatedSignature) (bool, error) {
 	if len(publicKeys) == 0 {
 		return false, errors.New("public key size is zero")
-
 	}
 	if len(messages) != len(publicKeys) {
 		return false, errors.New("message and key sizes must be equal")
 	}
-	G2 := bls.e.G2.One()
-	bls.e.AddPairInv(signature.point, G2)
-
+	e := bn254.NewEngine()
+	g1, g2 := e.G1, e.G2
+	e.AddPairInv(signature.point, g2.One())
 	for i := 0; i < len(messages); i++ {
-		M, err := bls.hasher.Hash(messages[i])
+		M, err := g1.HashToCurveFT(messages[i], verifier.Domain)
 		if err != nil {
 			return false, err
 		}
-		bls.e.AddPair(M, publicKeys[i].point)
+		e.AddPair(M, publicKeys[i].point)
 	}
-	return bls.e.Check(), nil
+	return e.Check(), nil
 }

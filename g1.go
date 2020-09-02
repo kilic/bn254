@@ -392,6 +392,11 @@ func (g *G1) MapToPointFT(in []byte) (*PointG1, error) {
 	if err != nil {
 		return nil, err
 	}
+	return g.mapToPointFT(t)
+}
+
+// MapToPointTI applies Fouque Tibouchi map to point method
+func (g *G1) mapToPointFT(t *fe) (*PointG1, error) {
 
 	w, a, t2 := new(fe), new(fe), new(fe)
 
@@ -464,4 +469,22 @@ func (g *G1) MapToPointFT(in []byte) (*PointG1, error) {
 		neg(y, y)
 	}
 	return &PointG1{*x3, *y, *one}, nil
+}
+
+func (g *G1) HashToCurveFT(msg, domain []byte) (*PointG1, error) {
+	hashRes, err := hashToFpXMDSHA256(msg, domain, 2)
+	if err != nil {
+		return nil, err
+	}
+	u0, u1 := hashRes[0], hashRes[1]
+	p0, err := g.mapToPointFT(u0)
+	if err != nil {
+		return nil, err
+	}
+	p1, err := g.mapToPointFT(u1)
+	if err != nil {
+		return nil, err
+	}
+	g.Add(p0, p0, p1)
+	return g.Affine(p0), nil
 }

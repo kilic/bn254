@@ -36,22 +36,19 @@ func TestKeyPairBytes(t *testing.T) {
 }
 
 func TestVerify(t *testing.T) {
-	message := &Message{
-		Message: []byte{0x10, 0x11, 0x12, 0x13},
-		Domain:  []byte{0x00, 0x00, 0x00, 0x00},
-	}
+	domain := []byte{0x00, 0x00, 0x00, 0x00}
+	message := []byte{0x10, 0x11, 0x12, 0x13}
 	account, err := NewKeyPair(rand.Reader)
 	if err != nil {
 		t.Fatal(err)
 	}
 	publicKey := account.Public
-	hasher := NewHasher_Keccak_FT()
-	signer := NewBLSSigner(hasher, account)
+	signer := NewBLSSigner(domain, account)
 	signature, err := signer.Sign(message)
 	if err != nil {
 		t.Fatal(err)
 	}
-	verifier := NewBLSVerifier(hasher)
+	verifier := NewBLSVerifier(domain)
 	verified, err := verifier.Verify(message, signature, publicKey)
 	if err != nil {
 		t.Fatal(err)
@@ -59,10 +56,7 @@ func TestVerify(t *testing.T) {
 	if !verified {
 		t.Fatalf("signature is not verified")
 	}
-	message2 := &Message{
-		Message: []byte{0x10, 0x11, 0x12, 0x13},
-		Domain:  []byte{0x00, 0x00, 0x00, 0x01},
-	}
+	message2 := []byte{0xff, 0xff, 0xff, 0xff}
 	verified, err = verifier.Verify(message2, signature, publicKey)
 	if err != nil {
 		t.Fatal(err)
@@ -73,11 +67,8 @@ func TestVerify(t *testing.T) {
 }
 
 func TestVerifyAggregatedCommon(t *testing.T) {
-	hasher := NewHasher_Keccak_FT()
-	message := &Message{
-		Message: []byte{0x10, 0x11, 0x12, 0x13},
-		Domain:  []byte{0x00, 0x00, 0x00, 0x00},
-	}
+	domain := []byte{0x00, 0x00, 0x00, 0x00}
+	message := []byte{0x10, 0x11, 0x12, 0x13}
 	signerSize := 1000
 	publicKeys := make([]*PublicKey, signerSize)
 	signatures := make([]*Signature, signerSize)
@@ -86,7 +77,7 @@ func TestVerifyAggregatedCommon(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		signer := NewBLSSigner(hasher, account)
+		signer := NewBLSSigner(domain, account)
 		publicKeys[i] = account.Public
 		signature, err := signer.Sign(message)
 		if err != nil {
@@ -94,7 +85,7 @@ func TestVerifyAggregatedCommon(t *testing.T) {
 		}
 		signatures[i] = signature
 	}
-	verifier := NewBLSVerifier(hasher)
+	verifier := NewBLSVerifier(domain)
 	aggregatedSignature := verifier.AggregateSignatures(signatures)
 	verified, err := verifier.VerifyAggregateCommon(message, publicKeys, aggregatedSignature)
 	if err != nil {
@@ -118,27 +109,22 @@ func TestVerifyAggregatedCommon(t *testing.T) {
 }
 
 func TestVerifyAggregated(t *testing.T) {
-	hasher := NewHasher_Keccak_FT()
 	domain := []byte{0x00, 0x00, 0x00, 0x00}
 	signerSize := 1000
 	publicKeys := make([]*PublicKey, signerSize)
-	messages := make([]*Message, signerSize)
+	messages := make([]Message, signerSize)
 	signatures := make([]*Signature, signerSize)
 	for i := 0; i < signerSize; i++ {
-		text := make([]byte, 4)
-		_, err := rand.Read(text)
+		message := make([]byte, 4)
+		_, err := rand.Read(message)
 		if err != nil {
 			t.Fatal(err)
-		}
-		message := &Message{
-			Message: text,
-			Domain:  domain,
 		}
 		account, err := NewKeyPair(rand.Reader)
 		if err != nil {
 			t.Fatal(err)
 		}
-		signer := NewBLSSigner(hasher, account)
+		signer := NewBLSSigner(domain, account)
 
 		signature, err := signer.Sign(message)
 		if err != nil {
@@ -148,7 +134,7 @@ func TestVerifyAggregated(t *testing.T) {
 		publicKeys[i] = account.Public
 		signatures[i] = signature
 	}
-	verifier := NewBLSVerifier(hasher)
+	verifier := NewBLSVerifier(domain)
 	aggregatedSignature := verifier.AggregateSignatures(signatures)
 	verified, err := verifier.VerifyAggregate(messages, publicKeys, aggregatedSignature)
 	if err != nil {
@@ -160,27 +146,22 @@ func TestVerifyAggregated(t *testing.T) {
 }
 
 func BenchmarkVerifyAggregated24ByteMsgSHA256(t *testing.B) {
-	hasher := NewHasher_SHA256_FT()
 	domain := []byte{0x00, 0x00, 0x00, 0x00}
 	signerSize := 1000
 	publicKeys := make([]*PublicKey, signerSize)
-	messages := make([]*Message, signerSize)
+	messages := make([]Message, signerSize)
 	signatures := make([]*Signature, signerSize)
 	for i := 0; i < signerSize; i++ {
-		text := make([]byte, 20)
-		_, err := rand.Read(text)
+		message := make([]byte, 20)
+		_, err := rand.Read(message)
 		if err != nil {
 			t.Fatal(err)
-		}
-		message := &Message{
-			Message: text,
-			Domain:  domain,
 		}
 		account, err := NewKeyPair(rand.Reader)
 		if err != nil {
 			t.Fatal(err)
 		}
-		signer := NewBLSSigner(hasher, account)
+		signer := NewBLSSigner(domain, account)
 
 		signature, err := signer.Sign(message)
 		if err != nil {
@@ -190,7 +171,7 @@ func BenchmarkVerifyAggregated24ByteMsgSHA256(t *testing.B) {
 		publicKeys[i] = account.Public
 		signatures[i] = signature
 	}
-	verifier := NewBLSVerifier(hasher)
+	verifier := NewBLSVerifier(domain)
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		aggregatedSignature := verifier.AggregateSignatures(signatures)
@@ -199,27 +180,22 @@ func BenchmarkVerifyAggregated24ByteMsgSHA256(t *testing.B) {
 }
 
 func BenchmarkVerifyAggregated24ByteMsgKeccak256(t *testing.B) {
-	hasher := NewHasher_Keccak_FT()
 	domain := []byte{0x00, 0x00, 0x00, 0x00}
 	signerSize := 1000
 	publicKeys := make([]*PublicKey, signerSize)
-	messages := make([]*Message, signerSize)
+	messages := make([]Message, signerSize)
 	signatures := make([]*Signature, signerSize)
 	for i := 0; i < signerSize; i++ {
-		text := make([]byte, 20)
-		_, err := rand.Read(text)
+		message := make([]byte, 20)
+		_, err := rand.Read(message)
 		if err != nil {
 			t.Fatal(err)
-		}
-		message := &Message{
-			Message: text,
-			Domain:  domain,
 		}
 		account, err := NewKeyPair(rand.Reader)
 		if err != nil {
 			t.Fatal(err)
 		}
-		signer := NewBLSSigner(hasher, account)
+		signer := NewBLSSigner(domain, account)
 		signature, err := signer.Sign(message)
 		if err != nil {
 			t.Fatal(err)
@@ -228,7 +204,7 @@ func BenchmarkVerifyAggregated24ByteMsgKeccak256(t *testing.B) {
 		publicKeys[i] = account.Public
 		signatures[i] = signature
 	}
-	verifier := NewBLSVerifier(hasher)
+	verifier := NewBLSVerifier(domain)
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
 		aggregatedSignature := verifier.AggregateSignatures(signatures)
