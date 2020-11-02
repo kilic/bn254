@@ -322,7 +322,7 @@ TEXT ·lsubAssign(SB), NOSPLIT, $0-24
 
 
 // func _neg(c *[4]uint64, a *[4]uint64, p *[4]uint64)
-TEXT ·_neg(SB), NOSPLIT, $0-24
+TEXT ·_neg(SB), NOSPLIT, $0-16
 	// |
 	MOVQ a+8(FP), DI
 
