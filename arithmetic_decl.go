@@ -1,3 +1,5 @@
+// +build amd64,!generic
+
 package bn254
 
 func square(c, a *fe) {
