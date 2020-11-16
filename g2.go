@@ -167,6 +167,11 @@ func (g *G2) InCorrectSubgroup(p *PointG2) bool {
 	return g.IsZero(tmp)
 }
 
+// ClearCofactor
+func (g *G2) ClearCofactor(p *PointG2) {
+	g.MulScalar(p, p, cofactorG2)
+}
+
 // IsOnCurve checks a G2 point is on curve.
 func (g *G2) IsOnCurve(p *PointG2) bool {
 	if g.IsZero(p) {

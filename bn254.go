@@ -66,7 +66,10 @@ var zz = &fe{0x71930c11d782e155, 0xa6bb947cffbe3323, 0xaa303344d4741444, 0x2c3b3
 // Curve constants
 
 // Group order
-var q = bigFromHex("0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47")
+var q = bigFromHex("0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001")
+
+// Cofactor G2
+var cofactorG2 = bigFromHex("0x30644e72e131a029b85045b68181585e06ceecda572a2489345f2299c0f9fa8d")
 
 // export curve order
 var Order = q

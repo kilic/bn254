@@ -275,6 +275,36 @@ func TestG2MapToCurveTI(t *testing.T) {
 	}
 }
 
+func TestSubgroup(t *testing.T) {
+	g := NewG2()
+	f := g.f
+	rand := func() *PointG2 {
+		for {
+			x, _ := new(fe2).rand(rand.Reader)
+			y := new(fe2)
+			f.square(y, x)
+			f.mul(y, y, x)
+			f.add(y, y, b2)
+			if f.sqrt(y, y) {
+				one := new(fe2).one()
+				return &PointG2{*x, *y, *one}
+			}
+		}
+	}
+
+	p0 := rand()
+	if !g.IsOnCurve(p0) {
+		t.Fatal("rand point must be on curve")
+	}
+	if g.InCorrectSubgroup(p0) {
+		t.Fatal("rand point must not be on correct subgroup")
+	}
+	g.ClearCofactor(p0)
+	if !g.InCorrectSubgroup(p0) {
+		t.Fatal("cofactor clearing failed")
+	}
+}
+
 func BenchmarkG2Add(t *testing.B) {
 	g2 := NewG2()
 	a, b, c := g2.rand(), g2.rand(), PointG2{}
