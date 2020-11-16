@@ -59,7 +59,7 @@ func (p *PublicKey) ToBytes() []byte {
 	return g.ToBytes(p.point)
 }
 
-func SignatureKeyFromBytes(in []byte) (*Signature, error) {
+func SignatureFromBytes(in []byte) (*Signature, error) {
 	g := bn254.NewG1()
 	signature, err := g.FromBytes(in)
 	if err != nil {
