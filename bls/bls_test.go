@@ -86,7 +86,7 @@ func TestVerifyAggregatedCommon(t *testing.T) {
 		signatures[i] = signature
 	}
 	verifier := NewBLSVerifier(domain)
-	aggregatedSignature := verifier.AggregateSignatures(signatures)
+	aggregatedSignature := AggregateSignatures(signatures)
 	verified, err := verifier.VerifyAggregateCommon(message, publicKeys, aggregatedSignature)
 	if err != nil {
 		t.Fatal(err)
@@ -135,7 +135,7 @@ func TestVerifyAggregated(t *testing.T) {
 		signatures[i] = signature
 	}
 	verifier := NewBLSVerifier(domain)
-	aggregatedSignature := verifier.AggregateSignatures(signatures)
+	aggregatedSignature := AggregateSignatures(signatures)
 	verified, err := verifier.VerifyAggregate(messages, publicKeys, aggregatedSignature)
 	if err != nil {
 		t.Fatal(err)
@@ -174,7 +174,7 @@ func BenchmarkVerifyAggregated24ByteMsgSHA256(t *testing.B) {
 	verifier := NewBLSVerifier(domain)
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
-		aggregatedSignature := verifier.AggregateSignatures(signatures)
+		aggregatedSignature := AggregateSignatures(signatures)
 		_, _ = verifier.VerifyAggregate(messages, publicKeys, aggregatedSignature)
 	}
 }
@@ -207,7 +207,7 @@ func BenchmarkVerifyAggregated24ByteMsgKeccak256(t *testing.B) {
 	verifier := NewBLSVerifier(domain)
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
-		aggregatedSignature := verifier.AggregateSignatures(signatures)
+		aggregatedSignature := AggregateSignatures(signatures)
 		_, _ = verifier.VerifyAggregate(messages, publicKeys, aggregatedSignature)
 	}
 }

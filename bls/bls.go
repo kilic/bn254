@@ -137,7 +137,7 @@ func (signer *BLSSigner) Sign(message Message) (*Signature, error) {
 	return &Signature{signature}, nil
 }
 
-func (verifier *BLSVerifier) AggregatePublicKeys(keys []*PublicKey) *AggregatedKey {
+func AggregatePublicKeys(keys []*PublicKey) *AggregatedKey {
 	g := bn254.NewG2()
 	if len(keys) == 0 {
 		return &AggregatedKey{g.Zero()}
@@ -149,7 +149,7 @@ func (verifier *BLSVerifier) AggregatePublicKeys(keys []*PublicKey) *AggregatedK
 	return &AggregatedKey{aggregated}
 }
 
-func (verifier *BLSVerifier) AggregateSignatures(signatures []*Signature) *AggregatedSignature {
+func AggregateSignatures(signatures []*Signature) *AggregatedSignature {
 	g := bn254.NewG1()
 	if len(signatures) == 0 {
 		return &AggregatedSignature{g.Zero()}
@@ -183,7 +183,7 @@ func (verifier *BLSVerifier) VerifyAggregateCommon(message Message, publicKeys [
 	if err != nil {
 		return false, err
 	}
-	aggregatedPublicKeys := verifier.AggregatePublicKeys(publicKeys)
+	aggregatedPublicKeys := AggregatePublicKeys(publicKeys)
 	e.AddPair(M, aggregatedPublicKeys.point)
 	e.AddPairInv(signature.point, g2.One())
 	return e.Check(), nil
